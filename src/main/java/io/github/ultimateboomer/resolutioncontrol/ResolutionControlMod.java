@@ -7,7 +7,6 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gl.WindowFramebuffer;
@@ -141,13 +140,13 @@ public class ResolutionControlMod implements ModInitializer {
 			framebuffer = new WindowFramebuffer(w, h);
 
 			// necessary to trigger initFbo() so that scaling algorithm is set correctly
-			framebuffer.resize(w, h, MinecraftClient.IS_SYSTEM_MAC);
+			framebuffer.resize(w, h);
 			calculateSize();
 		}
 
 		this.shouldScale = shouldScale;
 
-		client.getProfiler().swap(shouldScale ? "startScaling" : "finishScaling");
+		//client.getProfiler().swap(shouldScale ? "startScaling" : "finishScaling");
 
 		// swap out framebuffers as needed
 		if (shouldScale) {
@@ -196,7 +195,7 @@ public class ResolutionControlMod implements ModInitializer {
 			}
 		}
 
-		client.getProfiler().swap("level");
+		//client.getProfiler().swap("level");
 	}
 
 	public void initMinecraftFramebuffers() {
@@ -400,14 +399,12 @@ public class ResolutionControlMod implements ModInitializer {
 		if (screenshot) {
 			framebuffer.resize(
 					getScreenshotWidth(),
-					getScreenshotHeight(),
-					MinecraftClient.IS_SYSTEM_MAC
+					getScreenshotHeight()
 			);
 		} else {
 			framebuffer.resize(
 					getWindow().getFramebufferWidth(),
-					getWindow().getFramebufferHeight(),
-					MinecraftClient.IS_SYSTEM_MAC
+					getWindow().getFramebufferHeight()
 			);
 		}
 		shouldScale = prev;
