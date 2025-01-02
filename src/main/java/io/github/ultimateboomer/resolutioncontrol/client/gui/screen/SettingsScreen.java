@@ -26,8 +26,7 @@ public class SettingsScreen extends Screen {
     protected static final int containerWidth = 192;
     protected static final int containerHeight = 128;
 
-    protected static final Map<Class<? extends SettingsScreen>,
-            Function<Screen, SettingsScreen>> screensSupplierList;
+    protected static final Map<Class<? extends SettingsScreen>, Function<Screen, SettingsScreen>> screensSupplierList;
 
     static {
         screensSupplierList = new LinkedHashMap<>();
@@ -72,8 +71,11 @@ public class SettingsScreen extends Screen {
 
         screensSupplierList.forEach((c, constructor) -> {
             SettingsScreen r = constructor.apply(this.parent);
-            ButtonWidget b = new ButtonWidget.Builder(r.getTitle(), button -> client.setScreen(constructor.apply(this.parent))).dimensions(startX - menuButtonWidth - 20, startY + o.getValue(),
-                    menuButtonWidth, menuButtonHeight).build();
+            ButtonWidget b = new ButtonWidget.Builder(r.getTitle(),
+                    button -> client.setScreen(constructor.apply(this.parent)))
+                    .dimensions(startX - menuButtonWidth - 20, startY + o.getValue(),
+                            menuButtonWidth, menuButtonHeight)
+                    .build();
 
             if (this.getClass().equals(c))
                 b.active = false;
@@ -91,36 +93,38 @@ public class SettingsScreen extends Screen {
         this.addDrawableChild(doneButton);
     }
 
-    @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        if (client.world == null) {
-            renderInGameBackground(context);
-        }
+    // @Override
+    // public void render(DrawContext context, int mouseX, int mouseY, float delta)
+    // {
+    // if (client.world == null) {
+    // renderInGameBackground(context);
+    // }
 
-        RenderSystem.disableDepthTest();
-        RenderSystem.setShaderTexture(0, WINDOW_TEXTURE);
-        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+    // RenderSystem.disableDepthTest();
+    // RenderSystem.setShaderTexture(0, WINDOW_TEXTURE);
+    // RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-        int textureWidth = 256;
-        int textureHeight = 192;
-        Function<Identifier, RenderLayer> renderLayers = (sprite) -> RenderLayer.getEntityCutoutNoCull(sprite);
-        context.drawTexture(
-                renderLayers,
-                WINDOW_TEXTURE, 
-                centerX - textureWidth / 2, centerY - textureHeight / 2,
-                0, 0,
-                textureWidth, textureHeight,
-                textureWidth, textureHeight
-        );
+    // int textureWidth = 256;
+    // int textureHeight = 192;
+    // Function<Identifier, RenderLayer> renderLayers = (sprite) ->
+    // RenderLayer.getEntityCutoutNoCull(sprite);
+    // context.drawTexture(
+    // renderLayers,
+    // WINDOW_TEXTURE,
+    // centerX - textureWidth / 2, centerY - textureHeight / 2,
+    // 0, 0,
+    // textureWidth, textureHeight,
+    // textureWidth, textureHeight
+    // );
 
-        super.render(context, mouseX, mouseY, delta);
+    // super.render(context, mouseX, mouseY, delta);
 
-        drawLeftAlignedString(context, "\u00a7r" + getTitle().getString(),
-                centerX + 15, startY + 10, 0x000000);
+    // drawLeftAlignedString(context, "\u00a7r" + getTitle().getString(),
+    // centerX + 15, startY + 10, 0x000000);
 
-        drawRightAlignedString(context, text("settings.title").getString(),
-                centerX + 5, startY + 10, 0x404040);
-    }
+    // drawRightAlignedString(context, text("settings.title").getString(),
+    // centerX + 5, startY + 10, 0x404040);
+    // }
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
