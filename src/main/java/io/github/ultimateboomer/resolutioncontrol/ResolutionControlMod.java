@@ -85,11 +85,6 @@ public class ResolutionControlMod implements ModInitializer {
 				"key.categories.resolutioncontrol"));
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
-			if (client.world != null && shouldScale) {
-				applyInitialScaling();
-				shouldScale = false;
-			}
-
 			while (settingsKey.wasPressed()) {
 				client.setScreen(SettingsScreen.getScreen(lastSettingsScreen));
 			}
@@ -119,18 +114,6 @@ public class ResolutionControlMod implements ModInitializer {
 				DynamicResolutionHandler.INSTANCE.reset();
 			}
 		});
-	}
-
-	private void applyInitialScaling() {
-		if (ConfigHandler.instance.getConfig().enableDynamicResolution) {
-			DynamicResolutionHandler.INSTANCE.reset();
-		}
-
-		float scaleFactor = Config.getInstance().scaleFactor;
-		if (scaleFactor != 1.0f) {
-			setScaleFactor(1.0f);
-			LOGGER.info("Applied initial scaling: " + scaleFactor);
-		}
 	}
 
 	private void saveScreenshot(Framebuffer fb) {

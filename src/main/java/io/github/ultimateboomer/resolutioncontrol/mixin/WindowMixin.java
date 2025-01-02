@@ -1,7 +1,6 @@
 package io.github.ultimateboomer.resolutioncontrol.mixin;
 
 import io.github.ultimateboomer.resolutioncontrol.ResolutionControlMod;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.Window;
 import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Mixin;
@@ -14,10 +13,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class WindowMixin {
 	@Inject(at = @At("RETURN"), method = "getFramebufferWidth", cancellable = true)
 	private void getFramebufferWidth(CallbackInfoReturnable<Integer> ci) {
-		if (MinecraftClient.getInstance().world == null) {
-			return;
-		}
-
 		if (ResolutionControlMod.getInstance().isScreenshotting()) {
 			ci.setReturnValue(ResolutionControlMod.getInstance().getScreenshotWidth());
 		} else {
@@ -27,10 +22,6 @@ public abstract class WindowMixin {
 
 	@Inject(at = @At("RETURN"), method = "getFramebufferHeight", cancellable = true)
 	private void getFramebufferHeight(CallbackInfoReturnable<Integer> ci) {
-		if (MinecraftClient.getInstance().world == null) {
-			return;
-		}
-
 		if (ResolutionControlMod.getInstance().isScreenshotting()) {
 			ci.setReturnValue(ResolutionControlMod.getInstance().getScreenshotHeight());
 		} else {
