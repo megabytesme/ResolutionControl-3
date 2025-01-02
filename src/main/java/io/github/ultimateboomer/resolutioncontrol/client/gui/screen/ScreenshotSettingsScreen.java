@@ -5,14 +5,13 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.jetbrains.annotations.Nullable;
 
 public class ScreenshotSettingsScreen extends SettingsScreen {
-    private static final double[] scaleValues = {0.1, 0.25, 0.5, 1.0,
-            2.0, 3.0, 4.0, 6.0, 8.0, 16.0};
+    //private static final double[] scaleValues = {0.1, 0.25, 0.5, 1.0,
+    //        2.0, 3.0, 4.0, 6.0, 8.0, 16.0};
 
     private static final Text increaseText = Text.literal("x2");
     private static final Text decreaseText = Text.literal("/2");
