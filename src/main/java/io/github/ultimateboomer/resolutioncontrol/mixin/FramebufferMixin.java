@@ -21,22 +21,37 @@ import java.nio.IntBuffer;
 
 @Mixin(value = Framebuffer.class, priority = 900)
 public abstract class FramebufferMixin {
-    @Unique private boolean isMipmapped;
-    @Unique private float scaleMultiplier;
+    @Unique
+    private boolean isMipmapped;
+    @Unique
+    private float scaleMultiplier;
 
-    @Shadow public abstract int getColorAttachment();
+    @Shadow
+    public abstract int getColorAttachment();
 
-    @Shadow protected abstract void drawInternal(int width, int height, boolean disableBlend);
+    @Shadow
+    protected abstract void drawInternal(int width, int height);
+
+    @Inject(method = "draw(II)V", at = @At(value = "HEAD"), cancellable = true)
+    private void onDraw(int width, int height, CallbackInfo ci) {
+        if (isMipmapped) {
+            GlStateManager._bindTexture(this.getColorAttachment());
+            GL45.glGenerateMipmap(GL11.GL_TEXTURE_2D);
+        }
+
+        if (ResolutionControlMod.getInstance().isBeingScaled()) {
+            this.drawInternal(width, height);
+            ci.cancel();
+        }
+    }
 
     @Inject(method = "initFbo", at = @At("HEAD"))
-    private void onInitFbo(int width, int height, boolean getError, CallbackInfo ci) {
+    private void onInitFbo(int width, int height, CallbackInfo ci) {
         scaleMultiplier = (float) width / MinecraftClient.getInstance().getWindow().getWidth();
         isMipmapped = Config.getInstance().mipmapHighRes && scaleMultiplier > 2.0f;
     }
 
-
-    @Redirect(method = "*", at = @At(value = "INVOKE",
-            target = "Lcom/mojang/blaze3d/platform/GlStateManager;_texParameter(III)V"))
+    @Redirect(method = "*", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/GlStateManager;_texParameter(III)V"))
     private void onSetTexFilter(int target, int pname, int param) {
         if (pname == GL11.GL_TEXTURE_MIN_FILTER) {
             GlStateManager._texParameter(target, pname,
@@ -52,33 +67,18 @@ public abstract class FramebufferMixin {
         }
     }
 
-    @Redirect(method = "initFbo", at = @At(value = "INVOKE",
-            target = "Lcom/mojang/blaze3d/platform/GlStateManager;_texImage2D(IIIIIIIILjava/nio/IntBuffer;)V"))
+    @Redirect(method = "initFbo", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/GlStateManager;_texImage2D(IIIIIIIILjava/nio/IntBuffer;)V"))
     private void onTexImage(int target, int level, int internalFormat, int width, int height, int border, int format,
-                            int type, IntBuffer pixels) {
+            int type, IntBuffer pixels) {
         if (isMipmapped) {
             int mipmapLevel = MathHelper.ceil(Math.log(scaleMultiplier) / Math.log(2));
             for (int i = 0; i < mipmapLevel; i++) {
                 GlStateManager._texImage2D(target, i, internalFormat,
-                       width << i, height << i,
+                        width << i, height << i,
                         border, format, type, pixels);
             }
         } else {
             GlStateManager._texImage2D(target, 0, internalFormat, width, height, border, format, type, pixels);
-        }
-
-    }
-
-    @Inject(method = "draw(IIZ)V", at = @At(value = "HEAD"), cancellable = true)
-    private void onDraw(int width, int height, boolean disableBlend, CallbackInfo ci) {
-        if (isMipmapped) {
-            GlStateManager._bindTexture(this.getColorAttachment());
-            GL45.glGenerateMipmap(GL11.GL_TEXTURE_2D);
-        }
-
-        if (ResolutionControlMod.getInstance().isBeingScaled()) {
-            this.drawInternal(width, height, disableBlend);
-            ci.cancel();
         }
     }
 }
