@@ -34,6 +34,10 @@ public abstract class FramebufferMixin {
 
     @Inject(method = "draw(II)V", at = @At(value = "HEAD"), cancellable = true)
     private void onDraw(int width, int height, CallbackInfo ci) {
+        if (MinecraftClient.getInstance().world == null) {
+            return;
+        }
+
         if (isMipmapped) {
             GlStateManager._bindTexture(this.getColorAttachment());
             GL45.glGenerateMipmap(GL11.GL_TEXTURE_2D);

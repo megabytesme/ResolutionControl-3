@@ -30,30 +30,30 @@ public class ResolutionControlMod implements ModInitializer {
 	public static final String MOD_NAME = "ResolutionControl3";
 
 	public static final Logger LOGGER = LogManager.getLogger(MOD_NAME);
-	
+
 	public static Identifier identifier(String path) {
 		return Identifier.of(MOD_ID, path);
 	}
-	
+
 	private static final MinecraftClient client = MinecraftClient.getInstance();
-	
+
 	private static ResolutionControlMod instance;
-	
+
 	public static ResolutionControlMod getInstance() {
 		return instance;
 	}
 
-    private KeyBinding settingsKey;
+	private KeyBinding settingsKey;
 	private KeyBinding screenshotKey;
-	
+
 	private boolean shouldScale = false;
-	
+
 	@Nullable
 	private Framebuffer framebuffer;
 
 	@Nullable
 	private Framebuffer screenshotFrameBuffer;
-	
+
 	@Nullable
 	private Framebuffer clientFramebuffer;
 
@@ -67,11 +67,11 @@ public class ResolutionControlMod implements ModInitializer {
 	private long estimatedMemory;
 
 	private boolean screenshot = false;
-	
+
 	@Override
 	public void onInitialize() {
 		instance = this;
-		
+
 		settingsKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
 				"key.resolutioncontrol.settings",
 				InputUtil.Type.KEYSYM,
@@ -85,6 +85,11 @@ public class ResolutionControlMod implements ModInitializer {
 				"key.categories.resolutioncontrol"));
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
+			if (client.world != null && shouldScale) {
+				applyInitialScaling();
+				shouldScale = false;
+			}
+
 			while (settingsKey.wasPressed()) {
 				client.setScreen(SettingsScreen.getScreen(lastSettingsScreen));
 			}
@@ -116,25 +121,37 @@ public class ResolutionControlMod implements ModInitializer {
 		});
 	}
 
+	private void applyInitialScaling() {
+		if (ConfigHandler.instance.getConfig().enableDynamicResolution) {
+			DynamicResolutionHandler.INSTANCE.reset();
+		}
+
+		float scaleFactor = Config.getInstance().scaleFactor;
+		if (scaleFactor != 1.0f) {
+			setScaleFactor(1.0f);
+			LOGGER.info("Applied initial scaling: " + scaleFactor);
+		}
+	}
+
 	private void saveScreenshot(Framebuffer fb) {
 		ScreenshotRecorder.saveScreenshot(client.runDirectory,
 				RCUtil.getScreenshotFilename(client.runDirectory).toString(),
 				fb,
 				text -> client.player.sendMessage(text, false));
 	}
-	
-	public void setShouldScale(boolean shouldScale) {
-		if (shouldScale == this.shouldScale) return;
 
-//		if (getScaleFactor() == 1) return;
-		
+	public void setShouldScale(boolean shouldScale) {
+		if (shouldScale == this.shouldScale)
+			return;
+
+		// if (getScaleFactor() == 1) return;
+
 		Window window = getWindow();
 		if (framebuffer == null) {
 			this.shouldScale = true; // so we get the right dimensions
 			framebuffer = new WindowFramebuffer(
 					window.getFramebufferWidth(),
-					window.getFramebufferHeight()
-			);
+					window.getFramebufferHeight());
 			var w = window.getFramebufferWidth();
 			var h = window.getFramebufferHeight();
 			framebuffer = new WindowFramebuffer(w, h);
@@ -146,7 +163,7 @@ public class ResolutionControlMod implements ModInitializer {
 
 		this.shouldScale = shouldScale;
 
-		//client.getProfiler().swap(shouldScale ? "startScaling" : "finishScaling");
+		// client.getProfiler().swap(shouldScale ? "startScaling" : "finishScaling");
 
 		// swap out framebuffers as needed
 		if (shouldScale) {
@@ -190,12 +207,11 @@ public class ResolutionControlMod implements ModInitializer {
 			} else {
 				framebuffer.draw(
 						window.getFramebufferWidth(),
-						window.getFramebufferHeight()
-				);
+						window.getFramebufferHeight());
 			}
 		}
 
-		//client.getProfiler().swap("level");
+		// client.getProfiler().swap("level");
 	}
 
 	public void initMinecraftFramebuffers() {
@@ -219,22 +235,22 @@ public class ResolutionControlMod implements ModInitializer {
 	}
 
 	public void initScreenshotFramebuffer() {
-		if (Objects.nonNull(screenshotFrameBuffer)) screenshotFrameBuffer.delete();
+		if (Objects.nonNull(screenshotFrameBuffer))
+			screenshotFrameBuffer.delete();
 
 		screenshotFrameBuffer = new WindowFramebuffer(
-				getScreenshotWidth(), getScreenshotHeight()
-		);
+				getScreenshotWidth(), getScreenshotHeight());
 	}
-	
+
 	public float getScaleFactor() {
 		return Config.getInstance().scaleFactor;
 	}
-	
+
 	public void setScaleFactor(float scaleFactor) {
 		Config.getInstance().scaleFactor = scaleFactor;
-		
+
 		updateFramebufferSize();
-		
+
 		ConfigHandler.instance.saveConfig();
 	}
 
@@ -243,7 +259,8 @@ public class ResolutionControlMod implements ModInitializer {
 	}
 
 	public void setUpscaleAlgorithm(ScalingAlgorithm algorithm) {
-		if (algorithm == Config.getInstance().upscaleAlgorithm) return;
+		if (algorithm == Config.getInstance().upscaleAlgorithm)
+			return;
 
 		Config.getInstance().upscaleAlgorithm = algorithm;
 
@@ -266,7 +283,8 @@ public class ResolutionControlMod implements ModInitializer {
 	}
 
 	public void setDownscaleAlgorithm(ScalingAlgorithm algorithm) {
-		if (algorithm == Config.getInstance().downscaleAlgorithm) return;
+		if (algorithm == Config.getInstance().downscaleAlgorithm)
+			return;
 
 		Config.getInstance().downscaleAlgorithm = algorithm;
 
@@ -283,16 +301,17 @@ public class ResolutionControlMod implements ModInitializer {
 			setDownscaleAlgorithm(ScalingAlgorithm.NEAREST);
 		}
 	}
-	
+
 	public double getCurrentScaleFactor() {
-		return shouldScale ?
-				Config.getInstance().enableDynamicResolution ?
-						DynamicResolutionHandler.INSTANCE.getCurrentScale() : Config.getInstance().scaleFactor : 1;
+		return shouldScale
+				? Config.getInstance().enableDynamicResolution ? DynamicResolutionHandler.INSTANCE.getCurrentScale()
+						: Config.getInstance().scaleFactor
+				: 1;
 	}
 
 	public boolean isBeingScaled() {
-		return (Config.getInstance().enableDynamicResolution ?
-				DynamicResolutionHandler.INSTANCE.getCurrentScale() : Config.getInstance().scaleFactor) != 1.0f;
+		return (Config.getInstance().enableDynamicResolution ? DynamicResolutionHandler.INSTANCE.getCurrentScale()
+				: Config.getInstance().scaleFactor) != 1.0f;
 	}
 
 	public boolean getOverrideScreenshotScale() {
@@ -359,15 +378,14 @@ public class ResolutionControlMod implements ModInitializer {
 				getWindow().getWidth(), getWindow().getHeight(),
 				getWindow().getScaledWidth(), getWindow().getScaledHeight());
 
-//		if (getWindow().getScaledHeight() == lastWidth
-//				|| getWindow().getScaledHeight() == lastHeight)
-//		{
-			updateFramebufferSize();
-//		}
-
+		// if (getWindow().getScaledHeight() == lastWidth
+		// || getWindow().getScaledHeight() == lastHeight)
+		// {
+		updateFramebufferSize();
+		// }
 
 	}
-	
+
 	public void updateFramebufferSize() {
 		if (framebuffer == null)
 			return;
@@ -390,30 +408,29 @@ public class ResolutionControlMod implements ModInitializer {
 		// Framebuffer uses color (4 x 8 = 32 bit int) and depth (32 bit float)
 		estimatedMemory = (long) currentWidth * currentHeight * 8;
 	}
-	
+
 	public void resize(@Nullable Framebuffer framebuffer) {
-		if (framebuffer == null) return;
+		if (framebuffer == null)
+			return;
 
 		boolean prev = shouldScale;
 		shouldScale = true;
 		if (screenshot) {
 			framebuffer.resize(
 					getScreenshotWidth(),
-					getScreenshotHeight()
-			);
+					getScreenshotHeight());
 		} else {
 			framebuffer.resize(
 					getWindow().getFramebufferWidth(),
-					getWindow().getFramebufferHeight()
-			);
+					getWindow().getFramebufferHeight());
 		}
 		shouldScale = prev;
 	}
-	
+
 	private Window getWindow() {
 		return client.getWindow();
 	}
-	
+
 	private void setClientFramebuffer(Framebuffer framebuffer) {
 		client.framebuffer = framebuffer;
 	}
