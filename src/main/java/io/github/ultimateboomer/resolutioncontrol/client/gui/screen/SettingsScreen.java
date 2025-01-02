@@ -5,7 +5,7 @@ import io.github.ultimateboomer.resolutioncontrol.ResolutionControlMod;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.apache.commons.lang3.mutable.MutableInt;
@@ -103,10 +103,13 @@ public class SettingsScreen extends Screen {
 
         int textureWidth = 256;
         int textureHeight = 192;
+        Function<Identifier, RenderLayer> renderLayers = (sprite) -> RenderLayer.getEntityCutoutNoCull(sprite);
         context.drawTexture(
-                WINDOW_TEXTURE,
+                renderLayers,
+                WINDOW_TEXTURE, 
                 centerX - textureWidth / 2, centerY - textureHeight / 2,
                 0, 0,
+                textureWidth, textureHeight,
                 textureWidth, textureHeight
         );
 
